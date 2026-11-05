@@ -1,0 +1,828 @@
+-- ============================================================================
+-- AUXILIA - Sistema de gestion y distribucion equitativa de ayudas en emergencias
+-- SCRIPT 1 de 2: OBJETOS (borrado, tablas, comentarios, restricciones, secuencias y triggers)
+-- Motor: Oracle (APEX > SQL Workshop > SQL Scripts). Ejecutar completo, de una sola vez.
+-- ============================================================================
+
+-- ============================================================================
+-- Borrado de objetos (si no existen no se genera error)
+-- ============================================================================
+DECLARE
+  TYPE t_lista IS TABLE OF VARCHAR2(40);
+  v_vistas t_lista := t_lista('V_ALBERGUES','V_OCUPACION_ALBERGUES','V_SEMAFORO_VENCIMIENTOS','V_DESPACHOS_DETALLE','V_PRORRATEO_SOLICITUDES');
+  v_tablas t_lista := t_lista('DETALLE_DESPACHO','DESPACHO','VEHICULO','DETALLE_SOLICITUD','SOLICITUD_AYUDA','INVENTARIO_LOTE','PRODUCTO','REGISTRO_CENSO','DAMNIFICADO','CENSO','ASIGNACION_CUADRILLA','ALBERGUE_ACOPIO','CUADRILLA_SOCORRO','PERSONAL_SOCORRO','INSTITUCION','ZONA_AFECTADA');
+  v_secs   t_lista := t_lista('ZONA_AFECTADA_SEQ','INSTITUCION_SEQ','PERSONAL_SOCORRO_SEQ','CUADRILLA_SOCORRO_SEQ','ALBERGUE_ACOPIO_SEQ','ASIGNACION_CUADRILLA_SEQ','CENSO_SEQ','DAMNIFICADO_SEQ','REGISTRO_CENSO_SEQ','PRODUCTO_SEQ','INVENTARIO_LOTE_SEQ','SOLICITUD_AYUDA_SEQ','DETALLE_SOLICITUD_SEQ','VEHICULO_SEQ','DESPACHO_SEQ','DETALLE_DESPACHO_SEQ');
+BEGIN
+  FOR i IN 1 .. v_vistas.COUNT LOOP
+    BEGIN EXECUTE IMMEDIATE 'DROP VIEW ' || v_vistas(i);
+    EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;
+  END LOOP;
+  FOR i IN 1 .. v_tablas.COUNT LOOP
+    BEGIN EXECUTE IMMEDIATE 'DROP TABLE ' || v_tablas(i);
+    EXCEPTION WHEN OTHERS THEN IF SQLCODE != -942 THEN RAISE; END IF; END;
+  END LOOP;
+  FOR i IN 1 .. v_secs.COUNT LOOP
+    BEGIN EXECUTE IMMEDIATE 'DROP SEQUENCE ' || v_secs(i);
+    EXCEPTION WHEN OTHERS THEN IF SQLCODE != -2289 THEN RAISE; END IF; END;
+  END LOOP;
+END;
+/
+
+-- ============================================================================
+-- Creacion tabla de ZONA_AFECTADA
+-- ============================================================================
+CREATE TABLE ZONA_AFECTADA
+(cod_zona                 VARCHAR2(5) NOT NULL,
+  cod_zona_padre           VARCHAR2(5),
+  nombre                   VARCHAR2(60) NOT NULL,
+  tipo                     VARCHAR2(12) NOT NULL,
+  nivel_dano               VARCHAR2(8) NOT NULL,
+  habitantes_riesgo        NUMBER(9) NOT NULL,
+  pct_infra_comprometida   NUMBER(5,2) NOT NULL,
+  falla_total_servicios    CHAR(1) NOT NULL,
+  latitud                  NUMBER(9,6) NOT NULL,
+  longitud                 NUMBER(9,6) NOT NULL
+);
+
+COMMENT ON TABLE ZONA_AFECTADA IS 'Maestro de ZONAS afectadas (jerarquia recursiva).';
+COMMENT ON COLUMN ZONA_AFECTADA.cod_zona IS 'Codigo de la ZONA.';
+COMMENT ON COLUMN ZONA_AFECTADA.cod_zona_padre IS 'Zona de la que depende (departamento > municipio > comuna/vereda).';
+COMMENT ON COLUMN ZONA_AFECTADA.nombre IS 'Nombre de la ZONA.';
+COMMENT ON COLUMN ZONA_AFECTADA.tipo IS 'Tipo: DEPARTAMENTO, MUNICIPIO, COMUNA o VEREDA.';
+COMMENT ON COLUMN ZONA_AFECTADA.nivel_dano IS 'Nivel de dano: LEVE, MODERADO, GRAVE o CRITICO.';
+COMMENT ON COLUMN ZONA_AFECTADA.habitantes_riesgo IS 'Habitantes en riesgo (base del prorrateo equitativo).';
+COMMENT ON COLUMN ZONA_AFECTADA.pct_infra_comprometida IS 'Porcentaje de infraestructura comprometida.';
+COMMENT ON COLUMN ZONA_AFECTADA.falla_total_servicios IS 'S si hay falla total de agua y energia, N si no.';
+COMMENT ON COLUMN ZONA_AFECTADA.latitud IS 'Latitud de la zona.';
+COMMENT ON COLUMN ZONA_AFECTADA.longitud IS 'Longitud de la zona.';
+
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT PK_ZONA_AFECTADA PRIMARY KEY (cod_zona);
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT UK_ZON_NOMBRE UNIQUE (nombre);
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT CK_ZON_TIPO CHECK (tipo IN ('DEPARTAMENTO','MUNICIPIO','COMUNA','VEREDA'));
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT CK_ZON_NIVEL CHECK (nivel_dano IN ('LEVE','MODERADO','GRAVE','CRITICO'));
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT CK_ZON_FALLA CHECK (falla_total_servicios IN ('S','N'));
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT CK_ZON_PCT CHECK (pct_infra_comprometida BETWEEN 0 AND 100);
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT CK_ZON_HAB CHECK (habitantes_riesgo >= 0);
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT CK_ZON_CRITICO CHECK (nivel_dano <> 'CRITICO' OR pct_infra_comprometida > 40 OR falla_total_servicios = 'S');
+ALTER TABLE ZONA_AFECTADA ADD CONSTRAINT FK_ZON_PADRE FOREIGN KEY (cod_zona_padre) REFERENCES ZONA_AFECTADA (cod_zona);
+
+-- ============================================================================
+-- Creacion tabla de INSTITUCION
+-- ============================================================================
+CREATE TABLE INSTITUCION
+(cod_institucion          VARCHAR2(3) NOT NULL,
+  nombre                   VARCHAR2(60) NOT NULL,
+  telefono                 VARCHAR2(13) NOT NULL
+);
+
+COMMENT ON TABLE INSTITUCION IS 'Maestro de INSTITUCIONES de socorro.';
+COMMENT ON COLUMN INSTITUCION.cod_institucion IS 'Codigo de la INSTITUCION.';
+COMMENT ON COLUMN INSTITUCION.nombre IS 'Nombre de la INSTITUCION.';
+COMMENT ON COLUMN INSTITUCION.telefono IS 'Telefono de contacto.';
+
+ALTER TABLE INSTITUCION ADD CONSTRAINT PK_INSTITUCION PRIMARY KEY (cod_institucion);
+ALTER TABLE INSTITUCION ADD CONSTRAINT UK_INS_NOMBRE UNIQUE (nombre);
+
+-- ============================================================================
+-- Creacion tabla de PERSONAL_SOCORRO
+-- ============================================================================
+CREATE TABLE PERSONAL_SOCORRO
+(cod_personal             VARCHAR2(6) NOT NULL,
+  documento                VARCHAR2(12) NOT NULL,
+  nombres                  VARCHAR2(45) NOT NULL,
+  apellidos                VARCHAR2(45) NOT NULL,
+  telefono                 VARCHAR2(13) NOT NULL,
+  rol                      VARCHAR2(12) NOT NULL,
+  especialidad             VARCHAR2(40) NOT NULL,
+  disponibilidad           VARCHAR2(14) NOT NULL,
+  cod_institucion          VARCHAR2(3) NOT NULL
+);
+
+COMMENT ON TABLE PERSONAL_SOCORRO IS 'Maestro de PERSONAL de socorro.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.cod_personal IS 'Codigo del PERSONAL.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.documento IS 'Documento de identidad.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.nombres IS 'Nombres del PERSONAL.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.apellidos IS 'Apellidos del PERSONAL.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.telefono IS 'Telefono del PERSONAL.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.rol IS 'Rol: COORDINADOR, RESCATISTA, CONDUCTOR, CENSADOR o LOGISTICA.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.especialidad IS 'Especialidad del PERSONAL.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.disponibilidad IS 'Disponibilidad: DISPONIBLE, EN_MISION o DESCANSO.';
+COMMENT ON COLUMN PERSONAL_SOCORRO.cod_institucion IS 'INSTITUCION a la que pertenece.';
+
+ALTER TABLE PERSONAL_SOCORRO ADD CONSTRAINT PK_PERSONAL_SOCORRO PRIMARY KEY (cod_personal);
+ALTER TABLE PERSONAL_SOCORRO ADD CONSTRAINT UK_PER_DOC UNIQUE (documento);
+ALTER TABLE PERSONAL_SOCORRO ADD CONSTRAINT CK_PER_ROL CHECK (rol IN ('COORDINADOR','RESCATISTA','CONDUCTOR','CENSADOR','LOGISTICA'));
+ALTER TABLE PERSONAL_SOCORRO ADD CONSTRAINT CK_PER_DISP CHECK (disponibilidad IN ('DISPONIBLE','EN_MISION','DESCANSO'));
+ALTER TABLE PERSONAL_SOCORRO ADD CONSTRAINT FK_PER_INS FOREIGN KEY (cod_institucion) REFERENCES INSTITUCION (cod_institucion);
+
+-- ============================================================================
+-- Creacion tabla de CUADRILLA_SOCORRO
+-- ============================================================================
+CREATE TABLE CUADRILLA_SOCORRO
+(cod_cuadrilla            VARCHAR2(4) NOT NULL,
+  nombre                   VARCHAR2(50) NOT NULL,
+  especialidad             VARCHAR2(40) NOT NULL,
+  estado                   VARCHAR2(10) NOT NULL
+);
+
+COMMENT ON TABLE CUADRILLA_SOCORRO IS 'Maestro de CUADRILLAS de socorro.';
+COMMENT ON COLUMN CUADRILLA_SOCORRO.cod_cuadrilla IS 'Codigo de la CUADRILLA.';
+COMMENT ON COLUMN CUADRILLA_SOCORRO.nombre IS 'Nombre de la CUADRILLA.';
+COMMENT ON COLUMN CUADRILLA_SOCORRO.especialidad IS 'Especialidad de la CUADRILLA.';
+COMMENT ON COLUMN CUADRILLA_SOCORRO.estado IS 'Estado: ACTIVA o INACTIVA.';
+
+ALTER TABLE CUADRILLA_SOCORRO ADD CONSTRAINT PK_CUADRILLA_SOCORRO PRIMARY KEY (cod_cuadrilla);
+ALTER TABLE CUADRILLA_SOCORRO ADD CONSTRAINT UK_CUA_NOMBRE UNIQUE (nombre);
+ALTER TABLE CUADRILLA_SOCORRO ADD CONSTRAINT CK_CUA_ESTADO CHECK (estado IN ('ACTIVA','INACTIVA'));
+
+-- ============================================================================
+-- Creacion tabla de ALBERGUE_ACOPIO
+-- ============================================================================
+CREATE TABLE ALBERGUE_ACOPIO
+(cod_albergue             VARCHAR2(4) NOT NULL,
+  nombre                   VARCHAR2(60) NOT NULL,
+  tipo                     VARCHAR2(13) NOT NULL,
+  direccion                VARCHAR2(80) NOT NULL,
+  capacidad_max            NUMBER(6) NOT NULL,
+  cod_zona                 VARCHAR2(5) NOT NULL,
+  cod_coordinador          VARCHAR2(6) NOT NULL,
+  latitud                  NUMBER(9,6) NOT NULL,
+  longitud                 NUMBER(9,6) NOT NULL,
+  estado                   VARCHAR2(8) NOT NULL
+);
+
+COMMENT ON TABLE ALBERGUE_ACOPIO IS 'Maestro de ALBERGUES y centros de acopio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.cod_albergue IS 'Codigo del ALBERGUE o centro de acopio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.nombre IS 'Nombre del sitio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.tipo IS 'Tipo: ALBERGUE o CENTRO_ACOPIO.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.direccion IS 'Direccion del sitio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.capacidad_max IS 'Capacidad maxima (personas en albergue, estibas en acopio).';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.cod_zona IS 'ZONA donde esta ubicado.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.cod_coordinador IS 'PERSONAL que coordina el sitio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.latitud IS 'Latitud del sitio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.longitud IS 'Longitud del sitio.';
+COMMENT ON COLUMN ALBERGUE_ACOPIO.estado IS 'Estado: ABIERTO, CERRADO o LLENO.';
+
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT PK_ALBERGUE_ACOPIO PRIMARY KEY (cod_albergue);
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT UK_ALB_NOMBRE UNIQUE (nombre);
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT CK_ALB_TIPO CHECK (tipo IN ('ALBERGUE','CENTRO_ACOPIO'));
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT CK_ALB_CAP CHECK (capacidad_max > 0);
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT CK_ALB_ESTADO CHECK (estado IN ('ABIERTO','CERRADO','LLENO'));
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT FK_ALB_ZON FOREIGN KEY (cod_zona) REFERENCES ZONA_AFECTADA (cod_zona);
+ALTER TABLE ALBERGUE_ACOPIO ADD CONSTRAINT FK_ALB_PER FOREIGN KEY (cod_coordinador) REFERENCES PERSONAL_SOCORRO (cod_personal);
+
+-- ============================================================================
+-- Creacion tabla de ASIGNACION_CUADRILLA
+-- ============================================================================
+CREATE TABLE ASIGNACION_CUADRILLA
+(cod_asignacion           VARCHAR2(7) NOT NULL,
+  cod_cuadrilla            VARCHAR2(4) NOT NULL,
+  cod_personal             VARCHAR2(6) NOT NULL,
+  cod_zona                 VARCHAR2(5),
+  cod_albergue             VARCHAR2(4),
+  fecha_inicio             DATE NOT NULL,
+  fecha_fin                DATE,
+  estado                   VARCHAR2(10) NOT NULL
+);
+
+COMMENT ON TABLE ASIGNACION_CUADRILLA IS 'Maestro de ASIGNACIONES de personal a cuadrillas y destinos.';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.cod_asignacion IS 'Codigo de la ASIGNACION.';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.cod_cuadrilla IS 'CUADRILLA asignada.';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.cod_personal IS 'PERSONAL asignado.';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.cod_zona IS 'ZONA de destino (si no es albergue).';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.cod_albergue IS 'ALBERGUE de destino (si no es zona).';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.fecha_inicio IS 'Fecha de inicio de la asignacion.';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.fecha_fin IS 'Fecha de fin (nula si sigue activa).';
+COMMENT ON COLUMN ASIGNACION_CUADRILLA.estado IS 'Estado: ACTIVA, FINALIZADA o CANCELADA.';
+
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT PK_ASIGNACION_CUADRILLA PRIMARY KEY (cod_asignacion);
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT CK_ASI_ESTADO CHECK (estado IN ('ACTIVA','FINALIZADA','CANCELADA'));
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT CK_ASI_DESTINO CHECK ((cod_zona IS NOT NULL AND cod_albergue IS NULL) OR (cod_zona IS NULL AND cod_albergue IS NOT NULL));
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT CK_ASI_FECHAS CHECK (fecha_fin IS NULL OR fecha_fin >= fecha_inicio);
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT FK_ASI_CUA FOREIGN KEY (cod_cuadrilla) REFERENCES CUADRILLA_SOCORRO (cod_cuadrilla);
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT FK_ASI_PER FOREIGN KEY (cod_personal) REFERENCES PERSONAL_SOCORRO (cod_personal);
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT FK_ASI_ZON FOREIGN KEY (cod_zona) REFERENCES ZONA_AFECTADA (cod_zona);
+ALTER TABLE ASIGNACION_CUADRILLA ADD CONSTRAINT FK_ASI_ALB FOREIGN KEY (cod_albergue) REFERENCES ALBERGUE_ACOPIO (cod_albergue);
+
+-- ============================================================================
+-- Creacion tabla de CENSO
+-- ============================================================================
+CREATE TABLE CENSO
+(cod_censo                VARCHAR2(6) NOT NULL,
+  cod_zona                 VARCHAR2(5) NOT NULL,
+  cod_albergue             VARCHAR2(4),
+  cod_responsable          VARCHAR2(6) NOT NULL,
+  fecha_censo              DATE NOT NULL,
+  num_familias             NUMBER(6) NOT NULL,
+  num_menores              NUMBER(6) NOT NULL,
+  num_adultos_mayores      NUMBER(6) NOT NULL,
+  num_lesionados           NUMBER(6) NOT NULL
+);
+
+COMMENT ON TABLE CENSO IS 'Maestro de CENSOS de damnificados.';
+COMMENT ON COLUMN CENSO.cod_censo IS 'Codigo del CENSO.';
+COMMENT ON COLUMN CENSO.cod_zona IS 'ZONA censada.';
+COMMENT ON COLUMN CENSO.cod_albergue IS 'ALBERGUE donde se hizo el censo (si aplica).';
+COMMENT ON COLUMN CENSO.cod_responsable IS 'PERSONAL que realizo el censo.';
+COMMENT ON COLUMN CENSO.fecha_censo IS 'Fecha del censo.';
+COMMENT ON COLUMN CENSO.num_familias IS 'Numero de familias censadas.';
+COMMENT ON COLUMN CENSO.num_menores IS 'Numero de menores de edad.';
+COMMENT ON COLUMN CENSO.num_adultos_mayores IS 'Numero de adultos mayores.';
+COMMENT ON COLUMN CENSO.num_lesionados IS 'Numero de lesionados.';
+
+ALTER TABLE CENSO ADD CONSTRAINT PK_CENSO PRIMARY KEY (cod_censo);
+ALTER TABLE CENSO ADD CONSTRAINT CK_CEN_NUM CHECK (num_familias >= 0 AND num_menores >= 0 AND num_adultos_mayores >= 0 AND num_lesionados >= 0);
+ALTER TABLE CENSO ADD CONSTRAINT FK_CEN_ZON FOREIGN KEY (cod_zona) REFERENCES ZONA_AFECTADA (cod_zona);
+ALTER TABLE CENSO ADD CONSTRAINT FK_CEN_ALB FOREIGN KEY (cod_albergue) REFERENCES ALBERGUE_ACOPIO (cod_albergue);
+ALTER TABLE CENSO ADD CONSTRAINT FK_CEN_PER FOREIGN KEY (cod_responsable) REFERENCES PERSONAL_SOCORRO (cod_personal);
+
+-- ============================================================================
+-- Creacion tabla de DAMNIFICADO
+-- ============================================================================
+CREATE TABLE DAMNIFICADO
+(cod_damnificado          VARCHAR2(8) NOT NULL,
+  documento                VARCHAR2(12) NOT NULL,
+  nombres                  VARCHAR2(45) NOT NULL,
+  apellidos                VARCHAR2(45) NOT NULL,
+  fecha_nacimiento         DATE NOT NULL,
+  genero                   CHAR(1) NOT NULL,
+  lesionado                CHAR(1) NOT NULL
+);
+
+COMMENT ON TABLE DAMNIFICADO IS 'Maestro de DAMNIFICADOS.';
+COMMENT ON COLUMN DAMNIFICADO.cod_damnificado IS 'Codigo del DAMNIFICADO.';
+COMMENT ON COLUMN DAMNIFICADO.documento IS 'Documento de identidad.';
+COMMENT ON COLUMN DAMNIFICADO.nombres IS 'Nombres del DAMNIFICADO.';
+COMMENT ON COLUMN DAMNIFICADO.apellidos IS 'Apellidos del DAMNIFICADO.';
+COMMENT ON COLUMN DAMNIFICADO.fecha_nacimiento IS 'Fecha de nacimiento (la edad se calcula).';
+COMMENT ON COLUMN DAMNIFICADO.genero IS 'Genero: M o F.';
+COMMENT ON COLUMN DAMNIFICADO.lesionado IS 'S si esta lesionado, N si no.';
+
+ALTER TABLE DAMNIFICADO ADD CONSTRAINT PK_DAMNIFICADO PRIMARY KEY (cod_damnificado);
+ALTER TABLE DAMNIFICADO ADD CONSTRAINT UK_DAM_DOC UNIQUE (documento);
+ALTER TABLE DAMNIFICADO ADD CONSTRAINT CK_DAM_GENERO CHECK (genero IN ('M','F'));
+ALTER TABLE DAMNIFICADO ADD CONSTRAINT CK_DAM_LES CHECK (lesionado IN ('S','N'));
+
+-- ============================================================================
+-- Creacion tabla de REGISTRO_CENSO
+-- ============================================================================
+CREATE TABLE REGISTRO_CENSO
+(cod_registro             VARCHAR2(8) NOT NULL,
+  cod_damnificado          VARCHAR2(8) NOT NULL,
+  cod_censo                VARCHAR2(6) NOT NULL,
+  fecha_ingreso            DATE NOT NULL,
+  fecha_salida             DATE,
+  estado                   VARCHAR2(8) NOT NULL
+);
+
+COMMENT ON TABLE REGISTRO_CENSO IS 'Maestro de REGISTROS de damnificados en censos (conserva historial).';
+COMMENT ON COLUMN REGISTRO_CENSO.cod_registro IS 'Codigo del REGISTRO.';
+COMMENT ON COLUMN REGISTRO_CENSO.cod_damnificado IS 'DAMNIFICADO registrado.';
+COMMENT ON COLUMN REGISTRO_CENSO.cod_censo IS 'CENSO en el que aparece.';
+COMMENT ON COLUMN REGISTRO_CENSO.fecha_ingreso IS 'Fecha de ingreso al censo.';
+COMMENT ON COLUMN REGISTRO_CENSO.fecha_salida IS 'Fecha de salida (nula si sigue activo).';
+COMMENT ON COLUMN REGISTRO_CENSO.estado IS 'Estado: ACTIVO o CERRADO.';
+
+ALTER TABLE REGISTRO_CENSO ADD CONSTRAINT PK_REGISTRO_CENSO PRIMARY KEY (cod_registro);
+ALTER TABLE REGISTRO_CENSO ADD CONSTRAINT CK_REG_ESTADO CHECK (estado IN ('ACTIVO','CERRADO'));
+ALTER TABLE REGISTRO_CENSO ADD CONSTRAINT CK_REG_SALIDA CHECK ((estado = 'ACTIVO' AND fecha_salida IS NULL) OR (estado = 'CERRADO' AND fecha_salida IS NOT NULL AND fecha_salida >= fecha_ingreso));
+ALTER TABLE REGISTRO_CENSO ADD CONSTRAINT FK_REG_DAM FOREIGN KEY (cod_damnificado) REFERENCES DAMNIFICADO (cod_damnificado);
+ALTER TABLE REGISTRO_CENSO ADD CONSTRAINT FK_REG_CEN FOREIGN KEY (cod_censo) REFERENCES CENSO (cod_censo);
+
+-- ============================================================================
+-- Creacion tabla de PRODUCTO
+-- ============================================================================
+CREATE TABLE PRODUCTO
+(cod_producto             VARCHAR2(5) NOT NULL,
+  nombre                   VARCHAR2(60) NOT NULL,
+  descripcion              VARCHAR2(150) NOT NULL,
+  categoria                VARCHAR2(20) NOT NULL,
+  unidad_medida            VARCHAR2(10) NOT NULL,
+  perecedero               CHAR(1) NOT NULL
+);
+
+COMMENT ON TABLE PRODUCTO IS 'Maestro de PRODUCTOS de ayuda humanitaria.';
+COMMENT ON COLUMN PRODUCTO.cod_producto IS 'Codigo del PRODUCTO.';
+COMMENT ON COLUMN PRODUCTO.nombre IS 'Nombre del PRODUCTO.';
+COMMENT ON COLUMN PRODUCTO.descripcion IS 'Descripcion del PRODUCTO.';
+COMMENT ON COLUMN PRODUCTO.categoria IS 'Categoria del PRODUCTO.';
+COMMENT ON COLUMN PRODUCTO.unidad_medida IS 'Unidad de medida.';
+COMMENT ON COLUMN PRODUCTO.perecedero IS 'S si es perecedero, N si no.';
+
+ALTER TABLE PRODUCTO ADD CONSTRAINT PK_PRODUCTO PRIMARY KEY (cod_producto);
+ALTER TABLE PRODUCTO ADD CONSTRAINT UK_PRO_NOMBRE UNIQUE (nombre);
+ALTER TABLE PRODUCTO ADD CONSTRAINT CK_PRO_CAT CHECK (categoria IN ('ALIMENTO','AGUA','MEDICINA','ABRIGO','HIGIENE','HERRAMIENTA'));
+ALTER TABLE PRODUCTO ADD CONSTRAINT CK_PRO_UNI CHECK (unidad_medida IN ('UNIDAD','KG','LITRO','CAJA','PAQUETE'));
+ALTER TABLE PRODUCTO ADD CONSTRAINT CK_PRO_PER CHECK (perecedero IN ('S','N'));
+
+-- ============================================================================
+-- Creacion tabla de INVENTARIO_LOTE
+-- ============================================================================
+CREATE TABLE INVENTARIO_LOTE
+(cod_lote                 VARCHAR2(7) NOT NULL,
+  cod_albergue             VARCHAR2(4) NOT NULL,
+  cod_producto             VARCHAR2(5) NOT NULL,
+  numero_lote              VARCHAR2(20) NOT NULL,
+  origen                   VARCHAR2(25) NOT NULL,
+  fecha_ingreso            DATE NOT NULL,
+  fecha_vencimiento        DATE,
+  cantidad_inicial         NUMBER(10,2) NOT NULL,
+  existencias              NUMBER(10,2) NOT NULL
+);
+
+COMMENT ON TABLE INVENTARIO_LOTE IS 'Maestro de LOTES de inventario.';
+COMMENT ON COLUMN INVENTARIO_LOTE.cod_lote IS 'Codigo del LOTE.';
+COMMENT ON COLUMN INVENTARIO_LOTE.cod_albergue IS 'ALBERGUE o acopio donde esta almacenado.';
+COMMENT ON COLUMN INVENTARIO_LOTE.cod_producto IS 'PRODUCTO del lote.';
+COMMENT ON COLUMN INVENTARIO_LOTE.numero_lote IS 'Numero de lote del fabricante.';
+COMMENT ON COLUMN INVENTARIO_LOTE.origen IS 'Origen: DONACION, COMPRA, GOBIERNO, ONG o TRASLADO.';
+COMMENT ON COLUMN INVENTARIO_LOTE.fecha_ingreso IS 'Fecha de ingreso al inventario.';
+COMMENT ON COLUMN INVENTARIO_LOTE.fecha_vencimiento IS 'Fecha de vencimiento (nula si no vence).';
+COMMENT ON COLUMN INVENTARIO_LOTE.cantidad_inicial IS 'Cantidad recibida.';
+COMMENT ON COLUMN INVENTARIO_LOTE.existencias IS 'Existencias actuales del lote.';
+
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT PK_INVENTARIO_LOTE PRIMARY KEY (cod_lote);
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT UK_LOT_NUM UNIQUE (cod_albergue, cod_producto, numero_lote);
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT CK_LOT_ORIGEN CHECK (origen IN ('DONACION','COMPRA','GOBIERNO','ONG','TRASLADO'));
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT CK_LOT_CANT CHECK (cantidad_inicial > 0 AND existencias >= 0 AND existencias <= cantidad_inicial);
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT CK_LOT_VENC CHECK (fecha_vencimiento IS NULL OR fecha_vencimiento > fecha_ingreso);
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT FK_LOT_ALB FOREIGN KEY (cod_albergue) REFERENCES ALBERGUE_ACOPIO (cod_albergue);
+ALTER TABLE INVENTARIO_LOTE ADD CONSTRAINT FK_LOT_PRO FOREIGN KEY (cod_producto) REFERENCES PRODUCTO (cod_producto);
+
+-- ============================================================================
+-- Creacion tabla de SOLICITUD_AYUDA
+-- ============================================================================
+CREATE TABLE SOLICITUD_AYUDA
+(cod_solicitud            VARCHAR2(6) NOT NULL,
+  cod_zona                 VARCHAR2(5) NOT NULL,
+  cod_solicitante          VARCHAR2(6) NOT NULL,
+  fecha_solicitud          DATE NOT NULL,
+  prioridad                VARCHAR2(8) NOT NULL,
+  estado                   VARCHAR2(16) NOT NULL
+);
+
+COMMENT ON TABLE SOLICITUD_AYUDA IS 'Maestro de SOLICITUDES de ayuda.';
+COMMENT ON COLUMN SOLICITUD_AYUDA.cod_solicitud IS 'Codigo de la SOLICITUD.';
+COMMENT ON COLUMN SOLICITUD_AYUDA.cod_zona IS 'ZONA que solicita la ayuda.';
+COMMENT ON COLUMN SOLICITUD_AYUDA.cod_solicitante IS 'PERSONAL que registra la solicitud.';
+COMMENT ON COLUMN SOLICITUD_AYUDA.fecha_solicitud IS 'Fecha de la solicitud.';
+COMMENT ON COLUMN SOLICITUD_AYUDA.prioridad IS 'Prioridad: BAJA, MEDIA, ALTA o URGENTE.';
+COMMENT ON COLUMN SOLICITUD_AYUDA.estado IS 'Estado: PENDIENTE, EN_PROCESO, ATENDIDA o CANCELADA.';
+
+ALTER TABLE SOLICITUD_AYUDA ADD CONSTRAINT PK_SOLICITUD_AYUDA PRIMARY KEY (cod_solicitud);
+ALTER TABLE SOLICITUD_AYUDA ADD CONSTRAINT CK_SOL_PRIO CHECK (prioridad IN ('BAJA','MEDIA','ALTA','URGENTE'));
+ALTER TABLE SOLICITUD_AYUDA ADD CONSTRAINT CK_SOL_ESTADO CHECK (estado IN ('PENDIENTE','EN_PROCESO','ATENDIDA','CANCELADA'));
+ALTER TABLE SOLICITUD_AYUDA ADD CONSTRAINT FK_SOL_ZON FOREIGN KEY (cod_zona) REFERENCES ZONA_AFECTADA (cod_zona);
+ALTER TABLE SOLICITUD_AYUDA ADD CONSTRAINT FK_SOL_PER FOREIGN KEY (cod_solicitante) REFERENCES PERSONAL_SOCORRO (cod_personal);
+
+-- ============================================================================
+-- Creacion tabla de DETALLE_SOLICITUD
+-- ============================================================================
+CREATE TABLE DETALLE_SOLICITUD
+(cod_detalle              VARCHAR2(7) NOT NULL,
+  cod_solicitud            VARCHAR2(6) NOT NULL,
+  cod_producto             VARCHAR2(5) NOT NULL,
+  cantidad_solicitada      NUMBER(10,2) NOT NULL,
+  cantidad_asignada        NUMBER(10,2) NOT NULL
+);
+
+COMMENT ON TABLE DETALLE_SOLICITUD IS 'Maestro de DETALLES de solicitud.';
+COMMENT ON COLUMN DETALLE_SOLICITUD.cod_detalle IS 'Codigo del DETALLE.';
+COMMENT ON COLUMN DETALLE_SOLICITUD.cod_solicitud IS 'SOLICITUD a la que pertenece.';
+COMMENT ON COLUMN DETALLE_SOLICITUD.cod_producto IS 'PRODUCTO solicitado.';
+COMMENT ON COLUMN DETALLE_SOLICITUD.cantidad_solicitada IS 'Cantidad solicitada.';
+COMMENT ON COLUMN DETALLE_SOLICITUD.cantidad_asignada IS 'Cantidad asignada hasta el momento.';
+
+ALTER TABLE DETALLE_SOLICITUD ADD CONSTRAINT PK_DETALLE_SOLICITUD PRIMARY KEY (cod_detalle);
+ALTER TABLE DETALLE_SOLICITUD ADD CONSTRAINT UK_DSO_SOLPRO UNIQUE (cod_solicitud, cod_producto);
+ALTER TABLE DETALLE_SOLICITUD ADD CONSTRAINT CK_DSO_CANT CHECK (cantidad_solicitada > 0 AND cantidad_asignada >= 0 AND cantidad_asignada <= cantidad_solicitada);
+ALTER TABLE DETALLE_SOLICITUD ADD CONSTRAINT FK_DSO_SOL FOREIGN KEY (cod_solicitud) REFERENCES SOLICITUD_AYUDA (cod_solicitud);
+ALTER TABLE DETALLE_SOLICITUD ADD CONSTRAINT FK_DSO_PRO FOREIGN KEY (cod_producto) REFERENCES PRODUCTO (cod_producto);
+
+-- ============================================================================
+-- Creacion tabla de VEHICULO
+-- ============================================================================
+CREATE TABLE VEHICULO
+(cod_vehiculo             VARCHAR2(4) NOT NULL,
+  placa                    VARCHAR2(7) NOT NULL,
+  tipo                     VARCHAR2(12) NOT NULL,
+  capacidad_kg             NUMBER(7) NOT NULL,
+  estado                   VARCHAR2(14) NOT NULL
+);
+
+COMMENT ON TABLE VEHICULO IS 'Maestro de VEHICULOS de transporte.';
+COMMENT ON COLUMN VEHICULO.cod_vehiculo IS 'Codigo del VEHICULO.';
+COMMENT ON COLUMN VEHICULO.placa IS 'Placa del vehiculo.';
+COMMENT ON COLUMN VEHICULO.tipo IS 'Tipo de vehiculo.';
+COMMENT ON COLUMN VEHICULO.capacidad_kg IS 'Capacidad de carga en kg.';
+COMMENT ON COLUMN VEHICULO.estado IS 'Estado: DISPONIBLE, EN_RUTA o MANTENIMIENTO.';
+
+ALTER TABLE VEHICULO ADD CONSTRAINT PK_VEHICULO PRIMARY KEY (cod_vehiculo);
+ALTER TABLE VEHICULO ADD CONSTRAINT UK_VEH_PLACA UNIQUE (placa);
+ALTER TABLE VEHICULO ADD CONSTRAINT CK_VEH_TIPO CHECK (tipo IN ('CAMION','CAMIONETA','FURGON','AMBULANCIA','HELICOPTERO'));
+ALTER TABLE VEHICULO ADD CONSTRAINT CK_VEH_CAP CHECK (capacidad_kg > 0);
+ALTER TABLE VEHICULO ADD CONSTRAINT CK_VEH_ESTADO CHECK (estado IN ('DISPONIBLE','EN_RUTA','MANTENIMIENTO'));
+
+-- ============================================================================
+-- Creacion tabla de DESPACHO
+-- ============================================================================
+CREATE TABLE DESPACHO
+(cod_despacho             VARCHAR2(6) NOT NULL,
+  cod_solicitud            VARCHAR2(6) NOT NULL,
+  cod_albergue_origen      VARCHAR2(4) NOT NULL,
+  cod_albergue_destino     VARCHAR2(4),
+  cod_vehiculo             VARCHAR2(4) NOT NULL,
+  cod_conductor            VARCHAR2(6) NOT NULL,
+  cod_receptor             VARCHAR2(6),
+  fecha_creacion           DATE NOT NULL,
+  fecha_entrega            DATE,
+  estado                   VARCHAR2(10) NOT NULL,
+  codigo_confirmacion      VARCHAR2(12)
+);
+
+COMMENT ON TABLE DESPACHO IS 'Maestro de DESPACHOS de ayuda.';
+COMMENT ON COLUMN DESPACHO.cod_despacho IS 'Codigo del DESPACHO.';
+COMMENT ON COLUMN DESPACHO.cod_solicitud IS 'SOLICITUD que atiende.';
+COMMENT ON COLUMN DESPACHO.cod_albergue_origen IS 'Sitio de donde sale la carga.';
+COMMENT ON COLUMN DESPACHO.cod_albergue_destino IS 'Sitio de destino (si aplica).';
+COMMENT ON COLUMN DESPACHO.cod_vehiculo IS 'VEHICULO que transporta.';
+COMMENT ON COLUMN DESPACHO.cod_conductor IS 'PERSONAL que conduce.';
+COMMENT ON COLUMN DESPACHO.cod_receptor IS 'PERSONAL que recibe (firma de recibido).';
+COMMENT ON COLUMN DESPACHO.fecha_creacion IS 'Fecha de creacion del despacho.';
+COMMENT ON COLUMN DESPACHO.fecha_entrega IS 'Fecha de entrega.';
+COMMENT ON COLUMN DESPACHO.estado IS 'Estado: PREPARADO, EN_RUTA, ENTREGADO o CANCELADO.';
+COMMENT ON COLUMN DESPACHO.codigo_confirmacion IS 'Codigo de confirmacion de recibido.';
+
+ALTER TABLE DESPACHO ADD CONSTRAINT PK_DESPACHO PRIMARY KEY (cod_despacho);
+ALTER TABLE DESPACHO ADD CONSTRAINT CK_DES_ESTADO CHECK (estado IN ('PREPARADO','EN_RUTA','ENTREGADO','CANCELADO'));
+ALTER TABLE DESPACHO ADD CONSTRAINT CK_DES_FECHAS CHECK (fecha_entrega IS NULL OR fecha_entrega >= fecha_creacion);
+ALTER TABLE DESPACHO ADD CONSTRAINT CK_DES_ENTREGA CHECK (estado <> 'ENTREGADO' OR (fecha_entrega IS NOT NULL AND codigo_confirmacion IS NOT NULL AND cod_receptor IS NOT NULL));
+ALTER TABLE DESPACHO ADD CONSTRAINT CK_DES_SITIOS CHECK (cod_albergue_destino IS NULL OR cod_albergue_destino <> cod_albergue_origen);
+ALTER TABLE DESPACHO ADD CONSTRAINT FK_DES_SOL FOREIGN KEY (cod_solicitud) REFERENCES SOLICITUD_AYUDA (cod_solicitud);
+ALTER TABLE DESPACHO ADD CONSTRAINT FK_DES_ORI FOREIGN KEY (cod_albergue_origen) REFERENCES ALBERGUE_ACOPIO (cod_albergue);
+ALTER TABLE DESPACHO ADD CONSTRAINT FK_DES_DST FOREIGN KEY (cod_albergue_destino) REFERENCES ALBERGUE_ACOPIO (cod_albergue);
+ALTER TABLE DESPACHO ADD CONSTRAINT FK_DES_VEH FOREIGN KEY (cod_vehiculo) REFERENCES VEHICULO (cod_vehiculo);
+ALTER TABLE DESPACHO ADD CONSTRAINT FK_DES_CON FOREIGN KEY (cod_conductor) REFERENCES PERSONAL_SOCORRO (cod_personal);
+ALTER TABLE DESPACHO ADD CONSTRAINT FK_DES_REC FOREIGN KEY (cod_receptor) REFERENCES PERSONAL_SOCORRO (cod_personal);
+
+-- ============================================================================
+-- Creacion tabla de DETALLE_DESPACHO
+-- ============================================================================
+CREATE TABLE DETALLE_DESPACHO
+(cod_det_despacho         VARCHAR2(7) NOT NULL,
+  cod_despacho             VARCHAR2(6) NOT NULL,
+  cod_detalle              VARCHAR2(7) NOT NULL,
+  cod_lote                 VARCHAR2(7) NOT NULL,
+  cantidad                 NUMBER(10,2) NOT NULL
+);
+
+COMMENT ON TABLE DETALLE_DESPACHO IS 'Maestro de DETALLES de despacho (cantidad por lote).';
+COMMENT ON COLUMN DETALLE_DESPACHO.cod_det_despacho IS 'Codigo del DETALLE de despacho.';
+COMMENT ON COLUMN DETALLE_DESPACHO.cod_despacho IS 'DESPACHO al que pertenece.';
+COMMENT ON COLUMN DETALLE_DESPACHO.cod_detalle IS 'DETALLE de solicitud que atiende.';
+COMMENT ON COLUMN DETALLE_DESPACHO.cod_lote IS 'LOTE del que sale la cantidad.';
+COMMENT ON COLUMN DETALLE_DESPACHO.cantidad IS 'Cantidad despachada del lote.';
+
+ALTER TABLE DETALLE_DESPACHO ADD CONSTRAINT PK_DETALLE_DESPACHO PRIMARY KEY (cod_det_despacho);
+ALTER TABLE DETALLE_DESPACHO ADD CONSTRAINT CK_DDE_CANT CHECK (cantidad > 0);
+ALTER TABLE DETALLE_DESPACHO ADD CONSTRAINT FK_DDE_DES FOREIGN KEY (cod_despacho) REFERENCES DESPACHO (cod_despacho);
+ALTER TABLE DETALLE_DESPACHO ADD CONSTRAINT FK_DDE_DSO FOREIGN KEY (cod_detalle) REFERENCES DETALLE_SOLICITUD (cod_detalle);
+ALTER TABLE DETALLE_DESPACHO ADD CONSTRAINT FK_DDE_LOT FOREIGN KEY (cod_lote) REFERENCES INVENTARIO_LOTE (cod_lote);
+
+-- ============================================================================
+-- Indice unico: un damnificado solo puede tener un registro ACTIVO a la vez
+-- ============================================================================
+CREATE UNIQUE INDEX UX_REGISTRO_ACTIVO ON REGISTRO_CENSO (CASE WHEN estado = 'ACTIVO' THEN cod_damnificado END);
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: ZONA_AFECTADA
+-- ============================================================================
+CREATE SEQUENCE ZONA_AFECTADA_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 99999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_ZONA_AFECTADA
+BEFORE INSERT ON ZONA_AFECTADA
+FOR EACH ROW
+BEGIN
+  :NEW.cod_zona := LPAD(ZONA_AFECTADA_SEQ.NEXTVAL, 5, '0');
+END AUTO_ZONA_AFECTADA;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: INSTITUCION
+-- ============================================================================
+CREATE SEQUENCE INSTITUCION_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_INSTITUCION
+BEFORE INSERT ON INSTITUCION
+FOR EACH ROW
+BEGIN
+  :NEW.cod_institucion := LPAD(INSTITUCION_SEQ.NEXTVAL, 3, '0');
+END AUTO_INSTITUCION;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: PERSONAL_SOCORRO
+-- ============================================================================
+CREATE SEQUENCE PERSONAL_SOCORRO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_PERSONAL_SOCORRO
+BEFORE INSERT ON PERSONAL_SOCORRO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_personal := LPAD(PERSONAL_SOCORRO_SEQ.NEXTVAL, 6, '0');
+END AUTO_PERSONAL_SOCORRO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: CUADRILLA_SOCORRO
+-- ============================================================================
+CREATE SEQUENCE CUADRILLA_SOCORRO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_CUADRILLA_SOCORRO
+BEFORE INSERT ON CUADRILLA_SOCORRO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_cuadrilla := LPAD(CUADRILLA_SOCORRO_SEQ.NEXTVAL, 4, '0');
+END AUTO_CUADRILLA_SOCORRO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: ALBERGUE_ACOPIO
+-- ============================================================================
+CREATE SEQUENCE ALBERGUE_ACOPIO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_ALBERGUE_ACOPIO
+BEFORE INSERT ON ALBERGUE_ACOPIO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_albergue := LPAD(ALBERGUE_ACOPIO_SEQ.NEXTVAL, 4, '0');
+END AUTO_ALBERGUE_ACOPIO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: ASIGNACION_CUADRILLA
+-- ============================================================================
+CREATE SEQUENCE ASIGNACION_CUADRILLA_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_ASIGNACION_CUADRILLA
+BEFORE INSERT ON ASIGNACION_CUADRILLA
+FOR EACH ROW
+BEGIN
+  :NEW.cod_asignacion := LPAD(ASIGNACION_CUADRILLA_SEQ.NEXTVAL, 7, '0');
+END AUTO_ASIGNACION_CUADRILLA;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: CENSO
+-- ============================================================================
+CREATE SEQUENCE CENSO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_CENSO
+BEFORE INSERT ON CENSO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_censo := LPAD(CENSO_SEQ.NEXTVAL, 6, '0');
+END AUTO_CENSO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: DAMNIFICADO
+-- ============================================================================
+CREATE SEQUENCE DAMNIFICADO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 99999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_DAMNIFICADO
+BEFORE INSERT ON DAMNIFICADO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_damnificado := LPAD(DAMNIFICADO_SEQ.NEXTVAL, 8, '0');
+END AUTO_DAMNIFICADO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: REGISTRO_CENSO
+-- ============================================================================
+CREATE SEQUENCE REGISTRO_CENSO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 99999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_REGISTRO_CENSO
+BEFORE INSERT ON REGISTRO_CENSO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_registro := LPAD(REGISTRO_CENSO_SEQ.NEXTVAL, 8, '0');
+END AUTO_REGISTRO_CENSO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: PRODUCTO
+-- ============================================================================
+CREATE SEQUENCE PRODUCTO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 99999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_PRODUCTO
+BEFORE INSERT ON PRODUCTO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_producto := LPAD(PRODUCTO_SEQ.NEXTVAL, 5, '0');
+END AUTO_PRODUCTO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: INVENTARIO_LOTE
+-- ============================================================================
+CREATE SEQUENCE INVENTARIO_LOTE_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_INVENTARIO_LOTE
+BEFORE INSERT ON INVENTARIO_LOTE
+FOR EACH ROW
+BEGIN
+  :NEW.cod_lote := LPAD(INVENTARIO_LOTE_SEQ.NEXTVAL, 7, '0');
+END AUTO_INVENTARIO_LOTE;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: SOLICITUD_AYUDA
+-- ============================================================================
+CREATE SEQUENCE SOLICITUD_AYUDA_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_SOLICITUD_AYUDA
+BEFORE INSERT ON SOLICITUD_AYUDA
+FOR EACH ROW
+BEGIN
+  :NEW.cod_solicitud := LPAD(SOLICITUD_AYUDA_SEQ.NEXTVAL, 6, '0');
+END AUTO_SOLICITUD_AYUDA;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: DETALLE_SOLICITUD
+-- ============================================================================
+CREATE SEQUENCE DETALLE_SOLICITUD_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_DETALLE_SOLICITUD
+BEFORE INSERT ON DETALLE_SOLICITUD
+FOR EACH ROW
+BEGIN
+  :NEW.cod_detalle := LPAD(DETALLE_SOLICITUD_SEQ.NEXTVAL, 7, '0');
+END AUTO_DETALLE_SOLICITUD;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: VEHICULO
+-- ============================================================================
+CREATE SEQUENCE VEHICULO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_VEHICULO
+BEFORE INSERT ON VEHICULO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_vehiculo := LPAD(VEHICULO_SEQ.NEXTVAL, 4, '0');
+END AUTO_VEHICULO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: DESPACHO
+-- ============================================================================
+CREATE SEQUENCE DESPACHO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_DESPACHO
+BEFORE INSERT ON DESPACHO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_despacho := LPAD(DESPACHO_SEQ.NEXTVAL, 6, '0');
+END AUTO_DESPACHO;
+/
+
+-- ============================================================================
+-- Secuencia + trigger de codigo automatico: DETALLE_DESPACHO
+-- ============================================================================
+CREATE SEQUENCE DETALLE_DESPACHO_SEQ START WITH 1 INCREMENT BY 1 MINVALUE 1 MAXVALUE 9999999 NOCACHE ORDER;
+
+CREATE OR REPLACE TRIGGER AUTO_DETALLE_DESPACHO
+BEFORE INSERT ON DETALLE_DESPACHO
+FOR EACH ROW
+BEGIN
+  :NEW.cod_det_despacho := LPAD(DETALLE_DESPACHO_SEQ.NEXTVAL, 7, '0');
+END AUTO_DETALLE_DESPACHO;
+/
+
+-- ============================================================================
+-- REGLAS DE NEGOCIO (triggers)
+-- ============================================================================
+-- RN1: producto perecedero debe tener vencimiento y al menos 30 dias desde el ingreso al inventario
+CREATE OR REPLACE TRIGGER TRG_LOTE_PERECEDERO
+BEFORE INSERT ON INVENTARIO_LOTE
+FOR EACH ROW
+DECLARE
+  v_perecedero PRODUCTO.perecedero%TYPE;
+BEGIN
+  SELECT pro.perecedero INTO v_perecedero
+  FROM PRODUCTO pro
+  WHERE pro.cod_producto = :NEW.cod_producto;
+  IF v_perecedero = 'S' THEN
+    IF :NEW.fecha_vencimiento IS NULL THEN
+      RAISE_APPLICATION_ERROR(-20001, 'Un producto perecedero requiere fecha de vencimiento.');
+    END IF;
+    IF :NEW.fecha_vencimiento < :NEW.fecha_ingreso + 30 THEN
+      RAISE_APPLICATION_ERROR(-20002, 'El producto perecedero debe vencer al menos 30 dias despues de su ingreso.');
+    END IF;
+  END IF;
+END TRG_LOTE_PERECEDERO;
+/
+
+-- RN2: un albergue no puede superar el 100% de su capacidad
+CREATE OR REPLACE TRIGGER TRG_REGISTRO_CAPACIDAD
+BEFORE INSERT ON REGISTRO_CENSO
+FOR EACH ROW
+DECLARE
+  v_albergue ALBERGUE_ACOPIO.cod_albergue%TYPE;
+  v_capacidad ALBERGUE_ACOPIO.capacidad_max%TYPE;
+  v_ocupados NUMBER;
+BEGIN
+  IF :NEW.estado = 'ACTIVO' THEN
+    SELECT cen.cod_albergue INTO v_albergue
+    FROM CENSO cen
+    WHERE cen.cod_censo = :NEW.cod_censo;
+    IF v_albergue IS NOT NULL THEN
+      SELECT alb.capacidad_max INTO v_capacidad
+      FROM ALBERGUE_ACOPIO alb
+      WHERE alb.cod_albergue = v_albergue;
+      SELECT COUNT(*) INTO v_ocupados
+      FROM REGISTRO_CENSO reg, CENSO cen2
+      WHERE reg.cod_censo = cen2.cod_censo
+      AND cen2.cod_albergue = v_albergue
+      AND reg.estado = 'ACTIVO';
+      IF v_ocupados >= v_capacidad THEN
+        RAISE_APPLICATION_ERROR(-20003, 'El albergue ya alcanzo el 100% de su capacidad.');
+      END IF;
+    END IF;
+  END IF;
+END TRG_REGISTRO_CAPACIDAD;
+/
+
+-- RN3: un integrante no puede tener dos asignaciones cuyas fechas se crucen
+CREATE OR REPLACE TRIGGER TRG_ASIGNACION_SOLAPE
+BEFORE INSERT ON ASIGNACION_CUADRILLA
+FOR EACH ROW
+DECLARE
+  v_cruces NUMBER;
+BEGIN
+  IF :NEW.estado <> 'CANCELADA' THEN
+    SELECT COUNT(*) INTO v_cruces
+    FROM ASIGNACION_CUADRILLA asi
+    WHERE asi.cod_personal = :NEW.cod_personal
+    AND asi.estado <> 'CANCELADA'
+    AND asi.fecha_inicio <= NVL(:NEW.fecha_fin, DATE '9999-12-31')
+    AND NVL(asi.fecha_fin, DATE '9999-12-31') >= :NEW.fecha_inicio;
+    IF v_cruces > 0 THEN
+      RAISE_APPLICATION_ERROR(-20004, 'El integrante ya tiene una asignacion que se cruza con estas fechas.');
+    END IF;
+  END IF;
+END TRG_ASIGNACION_SOLAPE;
+/
+
+-- RN4: un despacho no puede superar las existencias del lote; descuenta el stock en la misma transaccion
+CREATE OR REPLACE TRIGGER TRG_DETDESP_STOCK
+BEFORE INSERT ON DETALLE_DESPACHO
+FOR EACH ROW
+DECLARE
+  v_existencias  INVENTARIO_LOTE.existencias%TYPE;
+  v_vencimiento  INVENTARIO_LOTE.fecha_vencimiento%TYPE;
+  v_alb_lote     INVENTARIO_LOTE.cod_albergue%TYPE;
+  v_prod_lote    INVENTARIO_LOTE.cod_producto%TYPE;
+  v_alb_origen   DESPACHO.cod_albergue_origen%TYPE;
+  v_sol_despacho DESPACHO.cod_solicitud%TYPE;
+  v_prod_det     DETALLE_SOLICITUD.cod_producto%TYPE;
+  v_sol_det      DETALLE_SOLICITUD.cod_solicitud%TYPE;
+BEGIN
+  SELECT lot.existencias, lot.fecha_vencimiento, lot.cod_albergue, lot.cod_producto
+  INTO v_existencias, v_vencimiento, v_alb_lote, v_prod_lote
+  FROM INVENTARIO_LOTE lot
+  WHERE lot.cod_lote = :NEW.cod_lote
+  FOR UPDATE;
+
+  SELECT des.cod_albergue_origen, des.cod_solicitud
+  INTO v_alb_origen, v_sol_despacho
+  FROM DESPACHO des
+  WHERE des.cod_despacho = :NEW.cod_despacho;
+
+  SELECT dso.cod_producto, dso.cod_solicitud
+  INTO v_prod_det, v_sol_det
+  FROM DETALLE_SOLICITUD dso
+  WHERE dso.cod_detalle = :NEW.cod_detalle;
+
+  IF v_alb_lote <> v_alb_origen THEN
+    RAISE_APPLICATION_ERROR(-20005, 'El lote no esta almacenado en el sitio de origen del despacho.');
+  END IF;
+  IF v_prod_lote <> v_prod_det OR v_sol_det <> v_sol_despacho THEN
+    RAISE_APPLICATION_ERROR(-20006, 'El lote o el detalle no corresponden a la solicitud del despacho.');
+  END IF;
+  IF v_vencimiento IS NOT NULL AND v_vencimiento < TRUNC(SYSDATE) THEN
+    RAISE_APPLICATION_ERROR(-20007, 'No se puede despachar un lote vencido.');
+  END IF;
+  IF :NEW.cantidad > v_existencias THEN
+    RAISE_APPLICATION_ERROR(-20008, 'La cantidad despachada supera las existencias del lote.');
+  END IF;
+
+  UPDATE INVENTARIO_LOTE
+  SET existencias = existencias - :NEW.cantidad
+  WHERE cod_lote = :NEW.cod_lote;
+END TRG_DETDESP_STOCK;
+/
+
