@@ -1,0 +1,626 @@
+-- ============================================================================
+-- AUXILIA - SCRIPT 2 de 2: DATOS y CONSULTAS
+-- Ejecutar DESPUES del script 1. Los codigos los generan las secuencias (empiezan en 1),
+-- por eso los INSERT no incluyen la llave primaria. Si un INSERT falla, vuelvan a correr
+-- el script 1 completo (reinicia las secuencias) y luego este.
+-- Las fechas son relativas a SYSDATE para que las reglas de negocio siempre se cumplan.
+-- ============================================================================
+
+-- ============================================================================
+-- Datos tabla ZONA_AFECTADA  (12 registros)
+-- ============================================================================
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES (NULL, 'Santander', 'DEPARTAMENTO', 'GRAVE', 185000, 31.2, 'N', 6.6437, -73.6536);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES (NULL, 'Boyacá', 'DEPARTAMENTO', 'MODERADO', 96000, 18.4, 'N', 5.4545, -73.362);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00001', 'Los Santos', 'MUNICIPIO', 'CRITICO', 14200, 46.5, 'N', 6.7578, -73.1042);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00001', 'Zapatoca', 'MUNICIPIO', 'GRAVE', 9800, 33.0, 'N', 6.8142, -73.2658);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00002', 'Soatá', 'MUNICIPIO', 'MODERADO', 6100, 22.5, 'N', 6.3336, -72.6828);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00003', 'Comuna 1 Centro Los Santos', 'COMUNA', 'CRITICO', 5200, 52.0, 'S', 6.7581, -73.1049);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00003', 'Vereda La Fuente', 'VEREDA', 'CRITICO', 1850, 41.5, 'N', 6.771, -73.119);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00004', 'Vereda El Rosal', 'VEREDA', 'GRAVE', 1200, 35.0, 'N', 6.829, -73.281);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00005', 'Vereda Santa Rosa', 'VEREDA', 'MODERADO', 780, 19.0, 'N', 6.345, -72.694);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00004', 'Comuna Centro Zapatoca', 'COMUNA', 'GRAVE', 3100, 38.0, 'N', 6.8148, -73.2664);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00003', 'Vereda Chicamocha Alto', 'VEREDA', 'CRITICO', 920, 30.0, 'S', 6.742, -73.087);
+INSERT INTO ZONA_AFECTADA (cod_zona_padre, nombre, tipo, nivel_dano, habitantes_riesgo, pct_infra_comprometida, falla_total_servicios, latitud, longitud)
+  VALUES ('00005', 'Vereda Los Pinos', 'VEREDA', 'LEVE', 450, 8.5, 'N', 6.351, -72.671);
+
+-- ============================================================================
+-- Datos tabla INSTITUCION  (10 registros)
+-- ============================================================================
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Cruz Roja Colombiana', '3105550101');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Defensa Civil Colombiana', '3105550102');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Unidad Nacional para la Gestión del Riesgo', '3105550103');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Cuerpo de Bomberos Voluntarios', '3105550104');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Ejército Nacional de Colombia', '3105550105');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Policía Nacional de Colombia', '3105550106');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Secretaría de Salud Departamental', '3105550107');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Gobernación de Santander', '3105550108');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Alcaldía Municipal de Los Santos', '3105550109');
+INSERT INTO INSTITUCION (nombre, telefono)
+  VALUES ('Programa Mundial de Alimentos', '3105550110');
+
+-- ============================================================================
+-- Datos tabla PERSONAL_SOCORRO  (26 registros)
+-- ============================================================================
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098107919', 'Ricardo Andrés', 'Mantilla Duarte', '3005550201', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '001');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098115838', 'Claudia Patricia', 'Rojas Beltrán', '3005550202', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '002');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098123757', 'Fabio Hernán', 'Suárez Cáceres', '3005550203', 'COORDINADOR', 'Gestión de centros de acopio', 'DISPONIBLE', '009');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098131676', 'Martha Lucía', 'Ortiz Gamboa', '3005550204', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '008');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098139595', 'Edgar Mauricio', 'Pinilla Ramírez', '3005550205', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '001');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098147514', 'Diana Carolina', 'Plata Serrano', '3005550206', 'COORDINADOR', 'Gestión de centros de acopio', 'DISPONIBLE', '002');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098155433', 'Wilson Javier', 'Gómez Alarcón', '3005550207', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '009');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098163352', 'Sandra Yaneth', 'Quiroga Mejía', '3005550208', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '003');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098171271', 'Néstor Raúl', 'Camacho Peña', '3005550209', 'COORDINADOR', 'Gestión de centros de acopio', 'DISPONIBLE', '003');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098179190', 'Liliana María', 'Ardila Uribe', '3005550210', 'COORDINADOR', 'Gestión de albergues', 'DISPONIBLE', '005');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098187109', 'Óscar David', 'Valencia Ríos', '3005550211', 'CONDUCTOR', 'Conducción de carga pesada', 'DISPONIBLE', '003');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098195028', 'Jhon Fredy', 'Medina Cortés', '3005550212', 'CONDUCTOR', 'Conducción de carga pesada', 'DISPONIBLE', '005');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098202947', 'Álvaro José', 'Bautista Lozano', '3005550213', 'CONDUCTOR', 'Conducción en terreno destapado', 'DISPONIBLE', '006');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098210866', 'Henry Alexander', 'Torres Navarro', '3005550214', 'CONDUCTOR', 'Conducción en terreno destapado', 'DESCANSO', '001');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098218785', 'Gustavo Adolfo', 'Silva Parra', '3005550215', 'CONDUCTOR', 'Transporte de medicamentos', 'DISPONIBLE', '002');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098226704', 'Laura Vanessa', 'Cardozo Rueda', '3005550216', 'RESCATISTA', 'Rescate estructural', 'EN_MISION', '001');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098234623', 'Andrés Felipe', 'Mora Sánchez', '3005550217', 'RESCATISTA', 'Búsqueda y rescate', 'EN_MISION', '002');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098242542', 'Karen Tatiana', 'Pabón León', '3005550218', 'RESCATISTA', 'Primeros auxilios', 'EN_MISION', '004');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098250461', 'Cristian Camilo', 'Prada Vega', '3005550219', 'RESCATISTA', 'Rescate vertical', 'EN_MISION', '004');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098258380', 'Natalia Andrea', 'Franco Ibáñez', '3005550220', 'RESCATISTA', 'Evacuación médica', 'EN_MISION', '005');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098266299', 'Brayan Steven', 'Duarte Gil', '3005550221', 'RESCATISTA', 'Remoción de escombros', 'EN_MISION', '006');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098274218', 'Marcela Johana', 'Aguilar Soto', '3005550222', 'CENSADOR', 'Censo poblacional', 'DISPONIBLE', '007');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098282137', 'Daniel Eduardo', 'Reyes Cañas', '3005550223', 'CENSADOR', 'Censo poblacional', 'DESCANSO', '009');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098290056', 'Paula Alejandra', 'Mendoza Villamizar', '3005550224', 'CENSADOR', 'Censo poblacional', 'DISPONIBLE', '008');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098297975', 'Julián Ricardo', 'Cruz Barajas', '3005550225', 'LOGISTICA', 'Logística y bodega', 'DISPONIBLE', '003');
+INSERT INTO PERSONAL_SOCORRO (documento, nombres, apellidos, telefono, rol, especialidad, disponibilidad, cod_institucion)
+  VALUES ('1098305894', 'Tatiana Isabel', 'Lizarazo Pérez', '3005550226', 'LOGISTICA', 'Logística y bodega', 'DISPONIBLE', '010');
+
+-- ============================================================================
+-- Datos tabla CUADRILLA_SOCORRO  (10 registros)
+-- ============================================================================
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Alfa', 'Rescate estructural', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Bravo', 'Búsqueda y rescate', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Charlie', 'Primeros auxilios', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Delta', 'Rescate vertical', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Echo', 'Evacuación médica', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Foxtrot', 'Remoción de escombros', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Golf', 'Apoyo psicosocial', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Hotel', 'Logística de albergues', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla India', 'Comunicaciones de emergencia', 'ACTIVA');
+INSERT INTO CUADRILLA_SOCORRO (nombre, especialidad, estado)
+  VALUES ('Cuadrilla Juliet', 'Reserva operativa', 'INACTIVA');
+
+-- ============================================================================
+-- Datos tabla ALBERGUE_ACOPIO  (10 registros)
+-- ============================================================================
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Coliseo Municipal Los Santos', 'ALBERGUE', 'Carrera 5 No. 8-20, Los Santos', 400, '00003', '000001', 6.7575, -73.1045, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Colegio Integrado Los Santos', 'ALBERGUE', 'Calle 7 No. 4-15, Los Santos', 250, '00006', '000002', 6.7583, -73.1052, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Centro de Acopio Los Santos', 'CENTRO_ACOPIO', 'Zona industrial vía a Piedecuesta', 5000, '00003', '000003', 6.7601, -73.1008, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Casa de la Cultura Zapatoca', 'ALBERGUE', 'Calle 3 No. 9-12, Zapatoca', 180, '00010', '000004', 6.8145, -73.2661, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Polideportivo Vereda El Rosal', 'ALBERGUE', 'Vereda El Rosal, km 4', 120, '00008', '000005', 6.8292, -73.2814, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Bodega Central Zapatoca', 'CENTRO_ACOPIO', 'Carrera 10 No. 2-40, Zapatoca', 8000, '00004', '000006', 6.8139, -73.2649, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Escuela Rural La Fuente', 'ALBERGUE', 'Vereda La Fuente, km 7', 90, '00007', '000007', 6.7712, -73.1193, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Coliseo Cubierto Soatá', 'ALBERGUE', 'Carrera 6 No. 10-30, Soatá', 300, '00005', '000008', 6.3339, -72.6824, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Centro de Acopio Soatá', 'CENTRO_ACOPIO', 'Calle 12 No. 3-50, Soatá', 6000, '00005', '000009', 6.3345, -72.6836, 'ABIERTO');
+INSERT INTO ALBERGUE_ACOPIO (nombre, tipo, direccion, capacidad_max, cod_zona, cod_coordinador, latitud, longitud, estado)
+  VALUES ('Salón Comunal Santa Rosa', 'ALBERGUE', 'Vereda Santa Rosa, centro poblado', 80, '00009', '000010', 6.3453, -72.6943, 'ABIERTO');
+
+-- ============================================================================
+-- Datos tabla ASIGNACION_CUADRILLA  (12 registros)
+-- ============================================================================
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0001', '000016', '00007', NULL, TRUNC(SYSDATE)-20, TRUNC(SYSDATE)-11, 'FINALIZADA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0001', '000016', NULL, '0007', TRUNC(SYSDATE)-10, NULL, 'ACTIVA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0002', '000017', '00006', NULL, TRUNC(SYSDATE)-20, TRUNC(SYSDATE)-11, 'FINALIZADA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0002', '000017', '00011', NULL, TRUNC(SYSDATE)-10, NULL, 'ACTIVA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0003', '000018', '00008', NULL, TRUNC(SYSDATE)-20, TRUNC(SYSDATE)-11, 'FINALIZADA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0003', '000018', NULL, '0005', TRUNC(SYSDATE)-10, NULL, 'ACTIVA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0004', '000019', '00010', NULL, TRUNC(SYSDATE)-20, TRUNC(SYSDATE)-11, 'FINALIZADA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0004', '000019', '00010', NULL, TRUNC(SYSDATE)-10, NULL, 'ACTIVA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0005', '000020', '00005', NULL, TRUNC(SYSDATE)-20, TRUNC(SYSDATE)-11, 'FINALIZADA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0006', '000020', '00012', NULL, TRUNC(SYSDATE)-10, NULL, 'ACTIVA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0007', '000021', '00009', NULL, TRUNC(SYSDATE)-20, TRUNC(SYSDATE)-11, 'FINALIZADA');
+INSERT INTO ASIGNACION_CUADRILLA (cod_cuadrilla, cod_personal, cod_zona, cod_albergue, fecha_inicio, fecha_fin, estado)
+  VALUES ('0008', '000021', NULL, '0010', TRUNC(SYSDATE)-10, NULL, 'ACTIVA');
+
+-- ============================================================================
+-- Datos tabla CENSO  (10 registros)
+-- ============================================================================
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00003', '0001', '000022', TRUNC(SYSDATE)-9, 62, 41, 18, 9);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00006', '0002', '000023', TRUNC(SYSDATE)-9, 48, 30, 12, 6);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00010', '0004', '000024', TRUNC(SYSDATE)-8, 35, 22, 9, 4);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00008', '0005', '000022', TRUNC(SYSDATE)-8, 27, 17, 6, 3);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00007', '0007', '000023', TRUNC(SYSDATE)-7, 21, 14, 5, 2);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00005', '0008', '000024', TRUNC(SYSDATE)-7, 44, 28, 11, 5);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00009', '0010', '000022', TRUNC(SYSDATE)-6, 15, 9, 4, 1);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00011', NULL, '000023', TRUNC(SYSDATE)-6, 12, 8, 3, 2);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00012', NULL, '000024', TRUNC(SYSDATE)-5, 9, 5, 2, 0);
+INSERT INTO CENSO (cod_zona, cod_albergue, cod_responsable, fecha_censo, num_familias, num_menores, num_adultos_mayores, num_lesionados)
+  VALUES ('00004', NULL, '000022', TRUNC(SYSDATE)-5, 38, 24, 10, 4);
+
+-- ============================================================================
+-- Datos tabla DAMNIFICADO  (20 registros)
+-- ============================================================================
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100206571', 'Carlos Andrés', 'Pinzón Duarte', TO_DATE('14/03/1985', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100213142', 'María Fernanda', 'Gómez Rueda', TO_DATE('02/09/1990', 'DD/MM/YYYY'), 'F', 'S');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100219713', 'Luis Alberto', 'Quintero Mora', TO_DATE('21/11/1962', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100226284', 'Ana Lucía', 'Barrera Ortiz', TO_DATE('30/05/1978', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100232855', 'José Miguel', 'Vargas Ardila', TO_DATE('09/01/1955', 'DD/MM/YYYY'), 'M', 'S');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100239426', 'Luz Marina', 'Díaz Ortega', TO_DATE('17/07/1949', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100245997', 'Juan David', 'Rincón Castillo', TO_DATE('25/12/2001', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100252568', 'Sandra Milena', 'Arenas Silva', TO_DATE('11/04/1988', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100259139', 'Pedro Antonio', 'Cáceres Lizarazo', TO_DATE('06/08/1958', 'DD/MM/YYYY'), 'M', 'S');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100265710', 'Rosa Elvira', 'Mantilla Prada', TO_DATE('19/02/1946', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100272281', 'Jorge Enrique', 'Camargo Reyes', TO_DATE('28/10/1973', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100278852', 'Yolanda Patricia', 'Ruiz Salazar', TO_DATE('13/06/1981', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100285423', 'Miguel Ángel', 'Santos Pabón', TO_DATE('04/03/2009', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100291994', 'Dora Inés', 'Hernández Cruz', TO_DATE('22/09/1952', 'DD/MM/YYYY'), 'F', 'S');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100298565', 'Camilo Esteban', 'Mejía Ariza', TO_DATE('31/01/1995', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100305136', 'Paola Andrea', 'Navas Ferreira', TO_DATE('08/11/1992', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100311707', 'Hernando León', 'Becerra Garzón', TO_DATE('15/05/1960', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100318278', 'Gloria Stella', 'Vesga Murillo', TO_DATE('27/08/1967', 'DD/MM/YYYY'), 'F', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100324849', 'Sebastián Felipe', 'Ardila Rey', TO_DATE('12/07/2018', 'DD/MM/YYYY'), 'M', 'N');
+INSERT INTO DAMNIFICADO (documento, nombres, apellidos, fecha_nacimiento, genero, lesionado)
+  VALUES ('1100331420', 'Valentina Sofía', 'Pabón Mora', TO_DATE('03/04/2020', 'DD/MM/YYYY'), 'F', 'N');
+
+-- ============================================================================
+-- Datos tabla REGISTRO_CENSO  (22 registros)
+-- ============================================================================
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000001', '000001', TRUNC(SYSDATE)-8, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000002', '000001', TRUNC(SYSDATE)-7, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000003', '000001', TRUNC(SYSDATE)-6, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000004', '000002', TRUNC(SYSDATE)-9, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000005', '000002', TRUNC(SYSDATE)-8, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000006', '000003', TRUNC(SYSDATE)-7, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000007', '000003', TRUNC(SYSDATE)-6, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000008', '000004', TRUNC(SYSDATE)-9, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000009', '000004', TRUNC(SYSDATE)-8, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000010', '000005', TRUNC(SYSDATE)-7, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000011', '000005', TRUNC(SYSDATE)-6, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000012', '000006', TRUNC(SYSDATE)-9, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000013', '000006', TRUNC(SYSDATE)-8, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000014', '000007', TRUNC(SYSDATE)-7, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000015', '000008', TRUNC(SYSDATE)-6, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000016', '000008', TRUNC(SYSDATE)-9, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000017', '000009', TRUNC(SYSDATE)-8, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000018', '000010', TRUNC(SYSDATE)-7, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000019', '000009', TRUNC(SYSDATE)-6, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000020', '000010', TRUNC(SYSDATE)-9, NULL, 'ACTIVO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000001', '000010', TRUNC(SYSDATE)-12, TRUNC(SYSDATE)-10, 'CERRADO');
+INSERT INTO REGISTRO_CENSO (cod_damnificado, cod_censo, fecha_ingreso, fecha_salida, estado)
+  VALUES ('00000002', '000009', TRUNC(SYSDATE)-12, TRUNC(SYSDATE)-10, 'CERRADO');
+
+-- ============================================================================
+-- Datos tabla PRODUCTO  (12 registros)
+-- ============================================================================
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Arroz blanco 500 g', 'Paquete de arroz blanco de 500 gramos', 'ALIMENTO', 'PAQUETE', 'S');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Lentejas 500 g', 'Paquete de lentejas de 500 gramos', 'ALIMENTO', 'PAQUETE', 'S');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Atún en lata', 'Lata de atún en aceite de 170 gramos', 'ALIMENTO', 'UNIDAD', 'S');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Agua potable 6 L', 'Botellón de agua potable de 6 litros', 'AGUA', 'UNIDAD', 'S');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Suero oral', 'Sobre de suero de rehidratación oral', 'MEDICINA', 'UNIDAD', 'S');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Acetaminofén 500 mg', 'Caja de acetaminofén de 500 mg por 100 tabletas', 'MEDICINA', 'CAJA', 'S');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Kit de primeros auxilios', 'Botiquín básico con gasas, vendas y antiséptico', 'MEDICINA', 'UNIDAD', 'N');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Cobija térmica', 'Cobija térmica para abrigo de damnificados', 'ABRIGO', 'UNIDAD', 'N');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Carpa familiar', 'Carpa impermeable para cuatro personas', 'ABRIGO', 'UNIDAD', 'N');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Jabón de tocador', 'Paquete de tres jabones de tocador', 'HIGIENE', 'PAQUETE', 'N');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Kit de higiene familiar', 'Kit con cepillos, crema dental, toallas y jabón', 'HIGIENE', 'UNIDAD', 'N');
+INSERT INTO PRODUCTO (nombre, descripcion, categoria, unidad_medida, perecedero)
+  VALUES ('Linterna con pilas', 'Linterna LED con pilas incluidas', 'HERRAMIENTA', 'UNIDAD', 'N');
+
+-- ============================================================================
+-- Datos tabla INVENTARIO_LOTE  (20 registros)
+-- ============================================================================
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0003', '00001', 'L-ARZ-001', 'DONACION', TRUNC(SYSDATE)-12, TRUNC(SYSDATE)+150, 2000, 2000);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0003', '00001', 'L-ARZ-002', 'COMPRA', TRUNC(SYSDATE)-6, TRUNC(SYSDATE)+220, 1500, 1500);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0003', '00002', 'L-LEN-001', 'GOBIERNO', TRUNC(SYSDATE)-10, TRUNC(SYSDATE)+120, 1200, 1200);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0003', '00004', 'L-AGU-001', 'ONG', TRUNC(SYSDATE)-9, TRUNC(SYSDATE)+200, 800, 800);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0003', '00008', 'L-COB-001', 'DONACION', TRUNC(SYSDATE)-11, NULL, 600, 600);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0003', '00005', 'L-SUE-001', 'GOBIERNO', TRUNC(SYSDATE)-8, TRUNC(SYSDATE)+90, 500, 500);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0006', '00003', 'L-ATU-001', 'COMPRA', TRUNC(SYSDATE)-10, TRUNC(SYSDATE)+300, 1800, 1800);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0006', '00004', 'L-AGU-002', 'ONG', TRUNC(SYSDATE)-7, TRUNC(SYSDATE)+180, 700, 700);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0006', '00009', 'L-CAR-001', 'DONACION', TRUNC(SYSDATE)-9, NULL, 150, 150);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0006', '00010', 'L-JAB-001', 'COMPRA', TRUNC(SYSDATE)-8, NULL, 900, 900);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0006', '00006', 'L-ACE-001', 'GOBIERNO', TRUNC(SYSDATE)-7, TRUNC(SYSDATE)+45, 300, 300);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0006', '00001', 'L-ARZ-003', 'DONACION', TRUNC(SYSDATE)-5, TRUNC(SYSDATE)+100, 1000, 1000);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0009', '00002', 'L-LEN-002', 'DONACION', TRUNC(SYSDATE)-6, TRUNC(SYSDATE)+160, 900, 900);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0009', '00007', 'L-KPA-001', 'GOBIERNO', TRUNC(SYSDATE)-9, NULL, 250, 250);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0009', '00011', 'L-KHI-001', 'ONG', TRUNC(SYSDATE)-8, NULL, 400, 400);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0009', '00012', 'L-LIN-001', 'COMPRA', TRUNC(SYSDATE)-7, NULL, 350, 350);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0009', '00008', 'L-COB-002', 'DONACION', TRUNC(SYSDATE)-6, NULL, 500, 500);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0009', '00004', 'L-AGU-003', 'COMPRA', TRUNC(SYSDATE)-4, TRUNC(SYSDATE)+60, 600, 600);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0001', '00004', 'L-AGU-004', 'TRASLADO', TRUNC(SYSDATE)-3, TRUNC(SYSDATE)+35, 200, 200);
+INSERT INTO INVENTARIO_LOTE (cod_albergue, cod_producto, numero_lote, origen, fecha_ingreso, fecha_vencimiento, cantidad_inicial, existencias)
+  VALUES ('0008', '00005', 'L-SUE-002', 'TRASLADO', TRUNC(SYSDATE)-20, TRUNC(SYSDATE)+12, 150, 150);
+
+-- ============================================================================
+-- Datos tabla SOLICITUD_AYUDA  (10 registros)
+-- ============================================================================
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00007', '000007', TRUNC(SYSDATE)-8, 'URGENTE', 'ATENDIDA');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00006', '000002', TRUNC(SYSDATE)-8, 'URGENTE', 'ATENDIDA');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00008', '000005', TRUNC(SYSDATE)-7, 'ALTA', 'ATENDIDA');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00010', '000004', TRUNC(SYSDATE)-6, 'ALTA', 'EN_PROCESO');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00005', '000008', TRUNC(SYSDATE)-6, 'MEDIA', 'EN_PROCESO');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00009', '000010', TRUNC(SYSDATE)-5, 'MEDIA', 'PENDIENTE');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00011', '000025', TRUNC(SYSDATE)-4, 'URGENTE', 'PENDIENTE');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00012', '000026', TRUNC(SYSDATE)-4, 'BAJA', 'PENDIENTE');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00003', '000001', TRUNC(SYSDATE)-3, 'ALTA', 'PENDIENTE');
+INSERT INTO SOLICITUD_AYUDA (cod_zona, cod_solicitante, fecha_solicitud, prioridad, estado)
+  VALUES ('00004', '000006', TRUNC(SYSDATE)-2, 'MEDIA', 'CANCELADA');
+
+-- ============================================================================
+-- Datos tabla DETALLE_SOLICITUD  (15 registros)
+-- ============================================================================
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000001', '00001', 120, 120);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000001', '00004', 100, 100);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000002', '00008', 200, 200);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000002', '00005', 60, 60);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000003', '00009', 40, 40);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000003', '00010', 150, 150);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000004', '00003', 300, 150);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000005', '00002', 200, 160);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000006', '00007', 60, 0);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000006', '00011', 80, 0);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000007', '00004', 150, 0);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000007', '00006', 20, 0);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000008', '00012', 30, 0);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000009', '00001', 400, 0);
+INSERT INTO DETALLE_SOLICITUD (cod_solicitud, cod_producto, cantidad_solicitada, cantidad_asignada)
+  VALUES ('000009', '00004', 200, 0);
+
+-- ============================================================================
+-- Datos tabla VEHICULO  (10 registros)
+-- ============================================================================
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKA123', 'CAMION', 8000, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKB234', 'CAMION', 6000, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKC345', 'FURGON', 3500, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKD456', 'CAMION', 8000, 'EN_RUTA');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKE567', 'CAMIONETA', 1200, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKF678', 'CAMIONETA', 1200, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKG789', 'FURGON', 3500, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKH890', 'CAMION', 6000, 'DISPONIBLE');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKI901', 'AMBULANCIA', 600, 'MANTENIMIENTO');
+INSERT INTO VEHICULO (placa, tipo, capacidad_kg, estado)
+  VALUES ('OKJ012', 'HELICOPTERO', 1500, 'EN_RUTA');
+
+-- ============================================================================
+-- Datos tabla DESPACHO  (10 registros)
+-- ============================================================================
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000001', '0003', '0007', '0001', '000011', '000007', TRUNC(SYSDATE)-7, TRUNC(SYSDATE)-6, 'ENTREGADO', 'CF-7A31B2');
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000002', '0003', '0002', '0002', '000012', '000002', TRUNC(SYSDATE)-7, TRUNC(SYSDATE)-6, 'ENTREGADO', 'CF-4C92D1');
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000003', '0006', '0005', '0003', '000013', '000005', TRUNC(SYSDATE)-6, TRUNC(SYSDATE)-5, 'ENTREGADO', 'CF-9E10A7');
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000004', '0006', '0004', '0004', '000014', NULL, TRUNC(SYSDATE)-1, NULL, 'EN_RUTA', NULL);
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000005', '0009', '0008', '0005', '000015', NULL, TRUNC(SYSDATE)-1, NULL, 'PREPARADO', NULL);
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000001', '0003', '0007', '0006', '000011', '000007', TRUNC(SYSDATE)-6, TRUNC(SYSDATE)-5, 'ENTREGADO', 'CF-2B67E4');
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000002', '0003', '0002', '0007', '000012', '000002', TRUNC(SYSDATE)-6, TRUNC(SYSDATE)-5, 'ENTREGADO', 'CF-5D08C9');
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000003', '0006', '0005', '0008', '000013', '000005', TRUNC(SYSDATE)-5, TRUNC(SYSDATE)-4, 'ENTREGADO', 'CF-8F43A0');
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000004', '0006', '0004', '0001', '000011', NULL, TRUNC(SYSDATE)-0, NULL, 'PREPARADO', NULL);
+INSERT INTO DESPACHO (cod_solicitud, cod_albergue_origen, cod_albergue_destino, cod_vehiculo, cod_conductor, cod_receptor, fecha_creacion, fecha_entrega, estado, codigo_confirmacion)
+  VALUES ('000005', '0003', '0008', '0010', '000012', NULL, TRUNC(SYSDATE)-1, NULL, 'EN_RUTA', NULL);
+
+-- ============================================================================
+-- Datos tabla DETALLE_DESPACHO  (13 registros)
+-- ============================================================================
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000001', '0000001', '0000001', 70);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000001', '0000002', '0000004', 100);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000002', '0000003', '0000005', 120);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000002', '0000004', '0000006', 60);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000003', '0000005', '0000009', 40);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000003', '0000006', '0000010', 90);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000004', '0000007', '0000007', 100);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000005', '0000008', '0000013', 100);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000006', '0000001', '0000002', 50);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000007', '0000003', '0000005', 80);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000008', '0000006', '0000010', 60);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000009', '0000007', '0000007', 50);
+INSERT INTO DETALLE_DESPACHO (cod_despacho, cod_detalle, cod_lote, cantidad)
+  VALUES ('000010', '0000008', '0000003', 60);
+
+COMMIT;
+
+-- ============================================================================
+-- CONSULTAS (vistas). Sin JOIN: las tablas se relacionan en el WHERE. Sin SELECT *.
+-- ============================================================================
+
+-- Consulta 1: Albergues y centros de acopio con su zona, nivel de dano y coordinador
+CREATE OR REPLACE VIEW V_ALBERGUES AS
+SELECT alb.cod_albergue, alb.nombre AS albergue, alb.tipo, zon.nombre AS zona, zon.nivel_dano,
+       per.nombres || ' ' || per.apellidos AS coordinador, alb.capacidad_max, alb.estado
+FROM ALBERGUE_ACOPIO alb, ZONA_AFECTADA zon, PERSONAL_SOCORRO per
+WHERE alb.cod_zona = zon.cod_zona
+AND alb.cod_coordinador = per.cod_personal
+ORDER BY zon.nombre, alb.nombre;
+
+-- Consulta 2: Ocupacion de cada albergue (personas con registro activo frente a su capacidad)
+CREATE OR REPLACE VIEW V_OCUPACION_ALBERGUES AS
+SELECT alb.cod_albergue, alb.nombre AS albergue, alb.capacidad_max,
+       COUNT(reg.cod_registro) AS personas_alojadas,
+       ROUND(COUNT(reg.cod_registro) * 100 / alb.capacidad_max, 2) AS pct_ocupacion
+FROM ALBERGUE_ACOPIO alb, CENSO cen, REGISTRO_CENSO reg
+WHERE cen.cod_albergue = alb.cod_albergue
+AND reg.cod_censo = cen.cod_censo
+AND reg.estado = 'ACTIVO'
+AND alb.tipo = 'ALBERGUE'
+GROUP BY alb.cod_albergue, alb.nombre, alb.capacidad_max
+ORDER BY pct_ocupacion DESC;
+
+-- Consulta 3: Semaforo de vencimientos (primero los lotes que vencen antes: criterio FEFO)
+CREATE OR REPLACE VIEW V_SEMAFORO_VENCIMIENTOS AS
+SELECT lot.cod_lote, pro.nombre AS producto, alb.nombre AS sitio, lot.numero_lote, lot.existencias,
+       lot.fecha_vencimiento,
+       TRUNC(lot.fecha_vencimiento) - TRUNC(SYSDATE) AS dias_para_vencer,
+       CASE WHEN TRUNC(lot.fecha_vencimiento) - TRUNC(SYSDATE) < 0 THEN 'VENCIDO'
+            WHEN TRUNC(lot.fecha_vencimiento) - TRUNC(SYSDATE) <= 30 THEN 'ROJO'
+            WHEN TRUNC(lot.fecha_vencimiento) - TRUNC(SYSDATE) <= 90 THEN 'AMARILLO'
+            ELSE 'VERDE' END AS semaforo
+FROM INVENTARIO_LOTE lot, PRODUCTO pro, ALBERGUE_ACOPIO alb
+WHERE lot.cod_producto = pro.cod_producto
+AND lot.cod_albergue = alb.cod_albergue
+AND lot.fecha_vencimiento IS NOT NULL
+AND lot.existencias > 0
+ORDER BY lot.fecha_vencimiento, lot.cod_lote;
+
+-- Consulta 4: Detalle de despachos con zona destino, producto, lote, vehiculo y conductor
+CREATE OR REPLACE VIEW V_DESPACHOS_DETALLE AS
+SELECT des.cod_despacho, des.estado, sol.cod_solicitud, zon.nombre AS zona_destino, pro.nombre AS producto,
+       lot.numero_lote, dde.cantidad, veh.placa,
+       per.nombres || ' ' || per.apellidos AS conductor, des.fecha_creacion
+FROM DESPACHO des, DETALLE_DESPACHO dde, DETALLE_SOLICITUD dso, SOLICITUD_AYUDA sol,
+     ZONA_AFECTADA zon, PRODUCTO pro, INVENTARIO_LOTE lot, VEHICULO veh, PERSONAL_SOCORRO per
+WHERE dde.cod_despacho = des.cod_despacho
+AND dde.cod_detalle = dso.cod_detalle
+AND dde.cod_lote = lot.cod_lote
+AND des.cod_solicitud = sol.cod_solicitud
+AND sol.cod_zona = zon.cod_zona
+AND dso.cod_producto = pro.cod_producto
+AND des.cod_vehiculo = veh.cod_vehiculo
+AND des.cod_conductor = per.cod_personal
+ORDER BY des.cod_despacho, pro.nombre;
+
+-- Consulta 5: Prorrateo equitativo. Reparte las existencias de cada producto entre las zonas con
+-- solicitudes abiertas, en proporcion a sus habitantes en riesgo (sin pasar de lo que falta por entregar)
+CREATE OR REPLACE VIEW V_PRORRATEO_SOLICITUDES AS
+SELECT sol.cod_solicitud, zon.nombre AS zona, zon.habitantes_riesgo, pro.nombre AS producto,
+       dso.cantidad_solicitada, dso.cantidad_asignada,
+       (SELECT NVL(SUM(lo1.existencias), 0) FROM INVENTARIO_LOTE lo1
+         WHERE lo1.cod_producto = dso.cod_producto) AS existencias_totales,
+       ROUND(zon.habitantes_riesgo * 100 /
+         (SELECT SUM(zo2.habitantes_riesgo)
+            FROM DETALLE_SOLICITUD ds2, SOLICITUD_AYUDA so2, ZONA_AFECTADA zo2
+           WHERE ds2.cod_solicitud = so2.cod_solicitud
+             AND so2.cod_zona = zo2.cod_zona
+             AND ds2.cod_producto = dso.cod_producto
+             AND so2.estado IN ('PENDIENTE', 'EN_PROCESO')), 2) AS pct_equitativo,
+       LEAST(dso.cantidad_solicitada - dso.cantidad_asignada,
+         ROUND((SELECT NVL(SUM(lo3.existencias), 0) FROM INVENTARIO_LOTE lo3
+                 WHERE lo3.cod_producto = dso.cod_producto) * zon.habitantes_riesgo /
+         (SELECT SUM(zo4.habitantes_riesgo)
+            FROM DETALLE_SOLICITUD ds4, SOLICITUD_AYUDA so4, ZONA_AFECTADA zo4
+           WHERE ds4.cod_solicitud = so4.cod_solicitud
+             AND so4.cod_zona = zo4.cod_zona
+             AND ds4.cod_producto = dso.cod_producto
+             AND so4.estado IN ('PENDIENTE', 'EN_PROCESO')), 2)) AS cantidad_sugerida
+FROM DETALLE_SOLICITUD dso, SOLICITUD_AYUDA sol, ZONA_AFECTADA zon, PRODUCTO pro
+WHERE dso.cod_solicitud = sol.cod_solicitud
+AND sol.cod_zona = zon.cod_zona
+AND dso.cod_producto = pro.cod_producto
+AND sol.estado IN ('PENDIENTE', 'EN_PROCESO')
+ORDER BY pro.nombre, sol.cod_solicitud;
+
+-- ============================================================================
+-- Ejecucion de las consultas (columnas explicitas, para las capturas de pantalla)
+-- ============================================================================
+
+SELECT cod_albergue, albergue, tipo, zona, nivel_dano, coordinador, capacidad_max, estado
+FROM V_ALBERGUES;
+
+SELECT cod_albergue, albergue, capacidad_max, personas_alojadas, pct_ocupacion
+FROM V_OCUPACION_ALBERGUES;
+
+SELECT cod_lote, producto, sitio, numero_lote, existencias, fecha_vencimiento, dias_para_vencer, semaforo
+FROM V_SEMAFORO_VENCIMIENTOS;
+
+SELECT cod_despacho, estado, cod_solicitud, zona_destino, producto, numero_lote, cantidad, placa, conductor
+FROM V_DESPACHOS_DETALLE;
+
+SELECT cod_solicitud, zona, habitantes_riesgo, producto, cantidad_solicitada, cantidad_asignada,
+       existencias_totales, pct_equitativo, cantidad_sugerida
+FROM V_PRORRATEO_SOLICITUDES;
